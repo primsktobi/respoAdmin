@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RESPO GAMING — Admin</title>
+<link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+</head>
+<body>
+
+<!-- == ÉCRAN LOGIN ==== -->
+<div id="ecran-login">
+  <div class="login-boite">
+    <div class="login-logo">RESPO <span>ADMIN</span></div>
+    <div class="login-titre">Panneau d'administration</div>
+    <div class="login-sous">Accès réservé au propriétaire</div>
+    <input class="login-champ" type="password" id="mdp-input" placeholder="Mot de passe admin" onkeydown="if(event.key==='Enter')seConnecter()">
+    <p class="login-err" id="login-err"><i class="fa-solid fa-triangle-exclamation"></i> Mot de passe incorrect</p>
+    <button class="login-btn" onclick="seConnecter()">Accéder au panel <i class="fa-solid fa-arrow-right"></i></button>
+  </div>
+</div>
+
+<!-- == APP ADMIN == -->
+<div id="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-gauche">
+      <div class="topbar-logo">RESPO <span>ADMIN</span></div>
+      <span class="topbar-badge">Propriétaire</span>
+    </div>
+    <div class="topbar-droite">
+      <span class="topbar-statut">Connecté en temps réel</span>
+      <button class="btn-deconnexion" onclick="seDeconnecter()"><i class="fa-solid fa-right-from-bracket"></i> Déconnexion</button>
+    </div>
+  </div>
+
+  <!-- CORPS -->
+  <div class="corps">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-titre">Conversations</span>
+        <span class="sidebar-compteur" id="compteur-conv">0</span>
+      </div>
+      <div class="sidebar-recherche">
+        <input class="input-recherche" type="text" placeholder="Rechercher un jeu…" oninput="filtrerConversations(this.value)">
+      </div>
+      <div class="liste-conversations" id="liste-conversations">
+        <div class="sidebar-vide">
+          <i class="fa-solid fa-comments"></i>
+          <p>En attente de messages…<br>Les clients apparaîtront ici.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ZONE PRINCIPALE -->
+    <div class="zone-principale">
+      <!-- État vide -->
+      <div class="zone-vide" id="zone-vide">
+        <i class="fa-solid fa-inbox"></i>
+        <h2>Aucune conversation</h2>
+        <p>Sélectionne une conversation dans la liste pour répondre au client.</p>
+      </div>
+
+      <!-- Chat actif (caché par défaut) -->
+      <div id="zone-chat" style="display:none;flex-direction:column;flex:1;overflow:hidden;display:none;">
+        <div class="chat-header">
+          <img class="chat-jeu-img" id="chat-img" src="" alt="">
+          <div class="chat-jeu-info">
+            <div class="chat-jeu-nom" id="chat-nom"></div>
+            <div class="chat-meta">
+              <span class="chat-plateforme" id="chat-plateforme"></span>
+              <span class="chat-prix" id="chat-prix"></span>
+            </div>
+            <div class="chat-client" id="chat-client"></div>
+          </div>
+          <div class="chat-actions">
+            <button class="btn-action" onclick="marquerLu()"><i class="fa-solid fa-check-double"></i> Lu</button>
+            <button class="btn-action danger" onclick="supprimerConversation()"><i class="fa-solid fa-trash"></i> Supprimer</button>
+          </div>
+        </div>
+
+        <div class="chat-messages" id="chat-messages">
+          <div class="chat-vide"><i class="fa-solid fa-comment-slash"></i><span>Aucun message</span></div>
+        </div>
+
+        <div class="chat-saisie">
+          <textarea class="admin-input" id="admin-input"
+            placeholder="Réponds au client…"
+            rows="1"
+            onkeydown="gererToucheAdmin(event)"></textarea>
+          <button class="btn-envoyer-admin" onclick="envoyerReponse()">
+            <i class="fa-solid fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANNEAU STATS -->
+    <div class="panneau-stats">
+      <div class="stats-section">
+        <div class="stats-titre">Vue d'ensemble</div>
+        <div class="stat-card">
+          <div class="stat-val admin-col" id="stat-total">0</div>
+          <div class="stat-label">Conversations actives</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="stat-nonlu" style="color:var(--pc)">0</div>
+          <div class="stat-label">Messages non lus</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val vert" id="stat-repondu">0</div>
+          <div class="stat-label">Conversations répondues</div>
+        </div>
+      </div>
+      <div class="stats-section">
+        <div class="stats-titre">Par plateforme</div>
+        <div class="plateforme-stat">
+          <div class="plateforme-stat-icone ps"><i class="fa-brands fa-playstation"></i></div>
+          <div class="plateforme-stat-info">
+            <div class="plateforme-stat-nom">PlayStation</div>
+            <div class="plateforme-stat-bar"><div class="plateforme-stat-fill ps" id="bar-ps" style="width:0%"></div></div>
+          </div>
+          <span class="plateforme-stat-nb" id="nb-ps">0</span>
+        </div>
+        <div class="plateforme-stat">
+          <div class="plateforme-stat-icone xbox"><i class="fa-brands fa-xbox"></i></div>
+          <div class="plateforme-stat-info">
+            <div class="plateforme-stat-nom">Xbox</div>
+            <div class="plateforme-stat-bar"><div class="plateforme-stat-fill xbox" id="bar-xbox" style="width:0%"></div></div>
+          </div>
+          <span class="plateforme-stat-nb" id="nb-xbox">0</span>
+        </div>
+        <div class="plateforme-stat">
+          <div class="plateforme-stat-icone pc"><i class="fa-solid fa-computer"></i></div>
+          <div class="plateforme-stat-info">
+            <div class="plateforme-stat-nom">PC</div>
+            <div class="plateforme-stat-bar"><div class="plateforme-stat-fill pc" id="bar-pc" style="width:0%"></div></div>
+          </div>
+          <span class="plateforme-stat-nb" id="nb-pc">0</span>
+        </div>
+      </div>
+      <div class="stats-section">
+        <div class="stats-titre">Raccourcis réponses</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <button class="btn-action" style="justify-content:flex-start;width:100%" onclick="insererRaccourci('Bonjour ! Je suis disponible pour ce jeu. Comment puis-je vous aider ?')">👋 Salutation</button>
+          <button class="btn-action" style="justify-content:flex-start;width:100%" onclick="insererRaccourci('Le jeu est disponible immédiatement. Quand souhaitez-vous le récupérer ?')">✅ Disponible</button>
+          <button class="btn-action" style="justify-content:flex-start;width:100%" onclick="insererRaccourci('Je peux faire un petit geste sur le prix. Faites-moi une offre.')">💰 Négociation</button>
+          <button class="btn-action" style="justify-content:flex-start;width:100%" onclick="insererRaccourci('La livraison peut se faire en main propre ou par envoi. Quelle option préférez-vous ?')">📦 Livraison</button>
+          <button class="btn-action" style="justify-content:flex-start;width:100%" onclick="insererRaccourci('Merci pour votre confiance ! Bonne aventure dans cet univers 🎮')">🙏 Merci</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- .corps -->
+</div><!-- #app -->
+
+<!-- TOAST -->
+<div class="toast" id="toast"><i class="fa-solid fa-check"></i><span id="toast-msg"></span></div>
+
+<!-- == FIREBASE == -->
+<script type="module" src="app.js"></script>
+</body>
+</html>
