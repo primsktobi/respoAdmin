@@ -13,7 +13,7 @@
 </head>
 <body>
 
-<!-- == ÉCRAN LOGIN ==== -->
+<!-- ==  LOGIN ==== -->
 <div id="ecran-login">
   <div class="login-boite">
     <div class="login-logo">RESPO <span>ADMIN</span></div>
@@ -25,10 +25,10 @@
   </div>
 </div>
 
-<!-- == APP ADMIN == -->
+<!-- == APP  == -->
 <div id="app">
 
-  <!-- TOPBAR -->
+  
   <div class="topbar">
     <div class="topbar-gauche">
       <div class="topbar-logo">RESPO <span>ADMIN</span></div>
@@ -69,9 +69,12 @@
         <p>Sélectionne une conversation dans la liste pour répondre au client.</p>
       </div>
 
-      <!-- Chat actif (caché par défaut) -->
+      
       <div id="zone-chat" style="display:none;flex-direction:column;flex:1;overflow:hidden;display:none;">
         <div class="chat-header">
+          <button class="btn-retour-mobile" onclick="retourListe()">
+          <i class="fa-solid fa-arrow-left"></i>
+        </button>
           <img class="chat-jeu-img" id="chat-img" src="" alt="">
           <div class="chat-jeu-info">
             <div class="chat-jeu-nom" id="chat-nom"></div>
@@ -103,7 +106,7 @@
       </div>
     </div>
 
-    <!-- PANNEAU STATS -->
+    <!--  STATS -->
     <div class="panneau-stats">
       <div class="stats-section">
         <div class="stats-titre">Vue d'ensemble</div>
@@ -159,13 +162,13 @@
       </div>
     </div>
 
-  </div><!-- .corps -->
-</div><!-- #app -->
+  </div>
+</div>
 
 <!-- TOAST -->
 <div class="toast" id="toast"><i class="fa-solid fa-check"></i><span id="toast-msg"></span></div>
 
-<!-- == FIREBASE == -->
+
 <script type="module" src="app.js"></script>
 </body>
 </html>

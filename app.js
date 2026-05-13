@@ -50,6 +50,13 @@ window.seDeconnecter = () => {
   document.getElementById('mdp-input').value = '';
 };
 
+window.retourListe = () => {
+  document.querySelector('.zone-principale').classList.remove('ouverte');
+  if (typeof stopMessages === 'function') { stopMessages(); stopMessages = null; }
+  convActive = null;
+};
+
+
 /* ════ ÉCOUTE CONVERSATIONS ════ */
 function demarrerEcoute() {
   const convsRef = ref(db, 'conversations');
@@ -114,11 +121,12 @@ function rafraichirListe(filtre = '') {
 
 window.filtrerConversations = v => rafraichirListe(v);
 
-/* ════ OUVRIR CONVERSATION ════ */
+/* ════  CONVERSATION ════ */
 async function ouvrirConversation(id) {
   convActive = id;
   const c = toutesConvs[id];
   if (!c) return;
+  document.querySelector('.zone-principale').classList.add('ouverte');
 
   // UI header
   document.getElementById('chat-img').src             = c.jeuImage || '';
@@ -136,13 +144,13 @@ async function ouvrirConversation(id) {
   zoneChat.style.flex          = '1';
   zoneChat.style.overflow      = 'hidden';
 
-  // ✅ CORRECTION : marquer comme lu à l'ouverture
+  // marquer comme lu à l'ouverture
   await set(ref(db, `conversations/${id}/meta/nonLu`), false);
 
   // Mise à jour sidebar
   rafraichirListe(document.querySelector('.input-recherche')?.value || '');
 
-  // ✅ CORRECTION : stopMessages remis à null après appel
+ 
   if (typeof stopMessages === 'function') { stopMessages(); stopMessages = null; }
 
   // Écoute messages
@@ -182,7 +190,7 @@ function afficherMessageAdmin(type, texte, timestamp, auteur) {
   conteneur.appendChild(div);
 }
 
-/* ════ ENVOYER RÉPONSE ════ */
+/* ==== ENVOYER RÉPONSE  ===== */
 window.envoyerReponse = async () => {
   const input = document.getElementById('admin-input');
   const texte = input.value.trim();
@@ -210,7 +218,7 @@ document.getElementById('admin-input').addEventListener('input', function() {
   this.style.height = Math.min(this.scrollHeight, 120) + 'px';
 });
 
-/* ════ ACTIONS ════ */
+/* === ACTIONS === */
 window.marquerLu = async () => {
   if (!convActive) return;
   await set(ref(db, `conversations/${convActive}/meta/nonLu`), false);
