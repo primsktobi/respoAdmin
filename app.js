@@ -1,6 +1,6 @@
 import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, push, onValue, set, remove, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 /* === CONFIG FIREBASE ==== */
 const firebaseConfig = {
     apiKey: "AIzaSyAthjJQtXHEGgKsyKdgnJPrUbXSjdpJtlg",
@@ -17,7 +17,8 @@ const MOT_DE_PASSE = "respo2025";
 
 const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
-
+const auth = getAuth(app);
+await signInWithEmailAndPassword(auth, "primskatobi@gmail.com", "respo2025");
 /* ════ ÉTAT ════ */
 let convActive   = null;
 let stopConvs    = null;
