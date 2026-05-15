@@ -1,6 +1,7 @@
 import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, push, onValue, set, remove, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getDatabase, ref, push, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
 /* === CONFIG FIREBASE ==== */
 const firebaseConfig = {
     apiKey: "AIzaSyAthjJQtXHEGgKsyKdgnJPrUbXSjdpJtlg",
@@ -13,12 +14,12 @@ const firebaseConfig = {
 };
 
 /* ════ MOT DE PASSE ADMIN ════ */
-const MOT_DE_PASSE = "respo2025";
+// const MOT_DE_PASSE = "respo2025";
 
-const app = initializeApp(firebaseConfig);
-const db  = getDatabase(app);
+const app  = initializeApp(firebaseConfig);
+const db   = getDatabase(app);
 const auth = getAuth(app);
-await signInWithEmailAndPassword(auth, "primskatobi@gmail.com", "respo2025");
+
 /* ════ ÉTAT ════ */
 let convActive   = null;
 let stopConvs    = null;
@@ -26,26 +27,34 @@ let stopMessages = null;
 let toutesConvs  = {};
 
 /* ════ CONNEXION ════ */
-window.seConnecter = () => {
-  const val = document.getElementById('mdp-input').value;
-  if (val === MOT_DE_PASSE) {
+window.seConnecter = async () => {
+  const mdp = document.getElementById('mdp-input').value;
+  
+  if (mdp === '') {
+    document.getElementById('login-err').style.display = 'block';
+    return;
+  }
+
+  try {
+    await signInWithEmailAndPassword(auth, "primsktobi@gmail.com", mdp);
     document.getElementById('ecran-login').style.display = 'none';
     document.getElementById('app').classList.add('visible');
     demarrerEcoute();
-  } else {
+  } catch(err) {
     document.getElementById('login-err').style.display = 'block';
     document.getElementById('mdp-input').value = '';
     document.getElementById('mdp-input').focus();
   }
 };
 
-window.seDeconnecter = () => {
+window.seDeconnecter = async () => {
   if (typeof stopConvs    === 'function') stopConvs();
   if (typeof stopMessages === 'function') stopMessages();
   stopConvs    = null;
   stopMessages = null;
   convActive   = null;
   toutesConvs  = {};
+  await signOut(auth); // ✅ Déconnexion Firebase aussi
   document.getElementById('app').classList.remove('visible');
   document.getElementById('ecran-login').style.display = 'flex';
   document.getElementById('mdp-input').value = '';
@@ -56,7 +65,6 @@ window.retourListe = () => {
   if (typeof stopMessages === 'function') { stopMessages(); stopMessages = null; }
   convActive = null;
 };
-
 
 /* ════ ÉCOUTE CONVERSATIONS ════ */
 function demarrerEcoute() {
@@ -97,7 +105,6 @@ function rafraichirListe(filtre = '') {
       ? new Date(c.timestampDernier).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'})
       : '';
 
-    // ✅ CORRECTION : icône plateforme propre, sans injection d'attributs dans la string
     let iconeHtml;
     if (c.jeuPlateforme === 'pc') {
       iconeHtml = '<i class="fa-solid fa-computer"></i>';
@@ -122,18 +129,17 @@ function rafraichirListe(filtre = '') {
 
 window.filtrerConversations = v => rafraichirListe(v);
 
-/* ════  CONVERSATION ════ */
+/* ════ OUVRIR CONVERSATION ════ */
 async function ouvrirConversation(id) {
   convActive = id;
   const c = toutesConvs[id];
   if (!c) return;
   document.querySelector('.zone-principale').classList.add('ouverte');
 
-  // UI header
-  document.getElementById('chat-img').src             = c.jeuImage || '';
-  document.getElementById('chat-nom').textContent     = c.jeuNom || '';
-  document.getElementById('chat-prix').textContent    = c.jeuPrix ? c.jeuPrix.toLocaleString('fr-FR') + ' FCFA' : '';
-  document.getElementById('chat-client').textContent  = '👤 ' + (c.pseudoClient || 'Client');
+  document.getElementById('chat-img').src            = c.jeuImage || '';
+  document.getElementById('chat-nom').textContent    = c.jeuNom || '';
+  document.getElementById('chat-prix').textContent   = c.jeuPrix ? c.jeuPrix.toLocaleString('fr-FR') + ' FCFA' : '';
+  document.getElementById('chat-client').textContent = '👤 ' + (c.pseudoClient || 'Client');
   const plEl = document.getElementById('chat-plateforme');
   plEl.textContent = {ps:'PlayStation', xbox:'Xbox', pc:'PC'}[c.jeuPlateforme] || '';
   plEl.className   = `chat-plateforme ${c.jeuPlateforme}`;
@@ -145,16 +151,11 @@ async function ouvrirConversation(id) {
   zoneChat.style.flex          = '1';
   zoneChat.style.overflow      = 'hidden';
 
-  // marquer comme lu à l'ouverture
   await set(ref(db, `conversations/${id}/meta/nonLu`), false);
-
-  // Mise à jour sidebar
   rafraichirListe(document.querySelector('.input-recherche')?.value || '');
 
- 
   if (typeof stopMessages === 'function') { stopMessages(); stopMessages = null; }
 
-  // Écoute messages
   const msgRef = ref(db, `conversations/${id}/messages`);
   stopMessages = onValue(msgRef, snapshot => {
     const conteneur = document.getElementById('chat-messages');
@@ -191,7 +192,7 @@ function afficherMessageAdmin(type, texte, timestamp, auteur) {
   conteneur.appendChild(div);
 }
 
-/* ==== ENVOYER RÉPONSE  ===== */
+/* ════ ENVOYER RÉPONSE ════ */
 window.envoyerReponse = async () => {
   const input = document.getElementById('admin-input');
   const texte = input.value.trim();
@@ -219,7 +220,7 @@ document.getElementById('admin-input').addEventListener('input', function() {
   this.style.height = Math.min(this.scrollHeight, 120) + 'px';
 });
 
-/* === ACTIONS === */
+/* ════ ACTIONS ════ */
 window.marquerLu = async () => {
   if (!convActive) return;
   await set(ref(db, `conversations/${convActive}/meta/nonLu`), false);
@@ -233,7 +234,6 @@ window.supprimerConversation = async () => {
   convActive = null;
   document.getElementById('zone-vide').style.display = 'flex';
   document.getElementById('zone-chat').style.display = 'none';
-  // ✅ CORRECTION : stopMessages remis à null après appel
   if (typeof stopMessages === 'function') { stopMessages(); stopMessages = null; }
   afficherToast('Conversation supprimée', 'info');
 };
